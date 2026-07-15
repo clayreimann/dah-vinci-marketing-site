@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "dahvinci",
+  "compatibility_date": "2026-07-15",
+  "assets": {
+    "directory": "./website",
+    "not_found_handling": "404-page",
+    "html_handling": "drop-trailing-slash"
+  },
+  "routes": [
+    {
+      "pattern": "dahvinci.madtown.cloud",
+      "custom_domain": true
+    }
+  ]
+}

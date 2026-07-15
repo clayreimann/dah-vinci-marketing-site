@@ -1,0 +1,12 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dah Vinci logo">
+  <defs>
+    <linearGradient id="gradFavicon" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4F46E5"/>
+      <stop offset="0.5" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#06B6D4"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="24" fill="url(#gradFavicon)"/>
+  <rect x="22" y="36" width="56" height="13" rx="6.5" fill="#ffffff"/>
+  <rect x="22" y="57" width="56" height="13" rx="6.5" fill="#ffffff" opacity="0.94"/>
+</svg>
