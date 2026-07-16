@@ -16,8 +16,10 @@ merges to protected `main` deploy the Dah Vinci marketing site to production.
   The source repository is public and preview content is not embargoed, so
   Cloudflare Access would add friction without protecting private material.
 - Protect `main` with a GitHub ruleset that requires a pull request and the
-  Cloudflare build check, but requires zero human approvals. This supports a
-  solo maintainer without allowing unverified direct pushes.
+  exact `Workers Builds: dahvinci` check from the **Cloudflare Workers and
+  Pages** GitHub App (`cloudflare-workers-and-pages`), but requires zero human
+  approvals. This supports a solo maintainer without allowing unverified direct
+  pushes or a same-named check from another integration.
 - Keep Wrangler configuration and deployment documentation in the repository
   as the durable source of truth.
 
@@ -62,7 +64,8 @@ Cloudflare has reported its first check. Configure it to:
 
 - Require changes to arrive through a pull request.
 - Require zero approving reviews.
-- Require the Cloudflare Workers build check from the Cloudflare GitHub App.
+- Require the exact `Workers Builds: dahvinci` check from the **Cloudflare
+  Workers and Pages** GitHub App (`cloudflare-workers-and-pages`).
 - Require the pull request branch to be up to date with `main` before merging.
 - Block force pushes.
 - Block deletion of `main`.
@@ -123,10 +126,11 @@ changes follow the same preview-and-review path.
 
 1. Create a feature branch containing `preview_urls: true` and the updated
    deployment documentation.
-2. Push the branch to GitHub.
-3. Connect the existing `dahvinci` Worker to the GitHub repository and enable
+2. Connect the existing `dahvinci` Worker to the GitHub repository and enable
    non-production branch builds.
-4. Open a pull request from the feature branch so Cloudflare produces its first
+3. Push the feature branch after the Git integration is connected so the push
+   triggers its first non-production Workers Build.
+4. Open a pull request from the feature branch so Cloudflare reports the
    preview, build-status PR comment, and named check run.
 5. Verify preview routing and content.
 6. Create the active `main` ruleset and select the observed Cloudflare check as
@@ -143,9 +147,11 @@ that check name and source.
 - `npm run check` succeeds locally and in Workers Builds.
 - A non-production branch creates a Worker version but does not change the
   active production version.
-- The pull request receives a successful Cloudflare check, and its public
-  branch alias is discoverable from Cloudflare's dashboard or Worker version
-  metadata even if the build-status comment omits the URL.
+- The pull request receives a successful `Workers Builds: dahvinci` check from
+  the **Cloudflare Workers and Pages** GitHub App
+  (`cloudflare-workers-and-pages`), and its public branch alias is discoverable
+  from Cloudflare's dashboard or Worker version metadata even if the
+  build-status comment omits the URL.
 - Preview `/`, `/privacy`, and `/support` return `200`; an unknown path returns
   the custom `404` page.
 - GitHub rejects a direct update to protected `main` and prevents merging while

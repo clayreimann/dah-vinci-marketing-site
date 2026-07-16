@@ -109,10 +109,16 @@ dashboard and Worker version metadata are the source of truth for the alias.
 For example, `codex/automated-worker-deployments` becomes
 `codex-automated-worker-deployments` in that hostname.
 
+The required GitHub status check is exactly `Workers Builds: dahvinci`. Its
+source must be the **Cloudflare Workers and Pages** GitHub App, whose app slug
+is `cloudflare-workers-and-pages`; a same-named check from another integration
+does not satisfy the production rule.
+
 `main` is protected by a GitHub ruleset. Changes require a pull request with a
-successful Cloudflare build; no human approval is required. Merging a passing
-PR triggers a production build and deploys the new version to
-`dahvinci.madtown.cloud`.
+successful `Workers Builds: dahvinci` check from that app; no human approval is
+required. The pull-request branch must be current with `main`, and force pushes
+to or deletion of `main` are blocked. Merging a passing PR triggers a production
+build and deploys the new version to `dahvinci.madtown.cloud`.
 
 ## Manual deployment
 
@@ -300,7 +306,8 @@ Restrict deletions: enabled
 Require a pull request before merging: enabled
 Required approvals: 0
 Require status checks to pass: enabled
-Required check: the Cloudflare check observed in Task 2, sourced from the Cloudflare GitHub App
+Required check: Workers Builds: dahvinci
+Required integration source: Cloudflare Workers and Pages GitHub App (cloudflare-workers-and-pages)
 Require branches to be up to date before merging: enabled
 Block force pushes: enabled
 ```
@@ -312,15 +319,69 @@ Expected: GitHub creates one active repository ruleset targeting `main`.
 Run:
 
 ```bash
-gh api repos/clayreimann/dah-vinci-marketing-site/rulesets \
-  --jq '.[] | select(.name == "Protect production main") | {name, enforcement, target}'
+HEAD_SHA="$(gh pr view --json headRefOid --jq '.headRefOid')"
+CLOUDFLARE_APP_ID="$(
+  gh api "repos/clayreimann/dah-vinci-marketing-site/commits/$HEAD_SHA/check-runs" \
+    --jq '.check_runs[] | select(.name == "Workers Builds: dahvinci" and .app.slug == "cloudflare-workers-and-pages") | .app.id'
+)"
+RULESET_ID="$(
+  gh api repos/clayreimann/dah-vinci-marketing-site/rulesets \
+    --jq '.[] | select(.name == "Protect production main") | .id'
+)"
+test -n "$CLOUDFLARE_APP_ID"
+test -n "$RULESET_ID"
+gh api "repos/clayreimann/dah-vinci-marketing-site/rulesets/$RULESET_ID" | \
+  jq --argjson cloudflare_app_id "$CLOUDFLARE_APP_ID" '{
+    name,
+    target,
+    enforcement,
+    ref_name: .conditions.ref_name,
+    bypass_actors,
+    pull_request_ok: any(
+      .rules[];
+      .type == "pull_request" and
+      .parameters.required_approving_review_count == 0
+    ),
+    required_check_ok: any(
+      .rules[];
+      .type == "required_status_checks" and
+      .parameters.strict_required_status_checks_policy == true and
+      any(
+        .parameters.required_status_checks[];
+        .context == "Workers Builds: dahvinci" and
+        .integration_id == $cloudflare_app_id
+      )
+    ),
+    deletion_restricted: any(.rules[]; .type == "deletion"),
+    non_fast_forward_restricted: any(.rules[]; .type == "non_fast_forward")
+  }'
 ```
 
 Expected:
 
 ```json
-{"enforcement":"active","name":"Protect production main","target":"branch"}
+{
+  "name": "Protect production main",
+  "target": "branch",
+  "enforcement": "active",
+  "ref_name": {
+    "exclude": [],
+    "include": ["~DEFAULT_BRANCH"]
+  },
+  "bypass_actors": [],
+  "pull_request_ok": true,
+  "required_check_ok": true,
+  "deletion_restricted": true,
+  "non_fast_forward_restricted": true
+}
 ```
+
+The `CLOUDFLARE_APP_ID` lookup also proves the required check source has the
+exact app slug `cloudflare-workers-and-pages`; `required_check_ok` proves the
+ruleset pins that integration ID, uses the exact check context, and requires a
+strict/up-to-date branch. Treat a missing value, duplicate ruleset ID, different
+ref condition, non-empty bypass list, or any `false` audit field as a failed
+verification.
 
 - [ ] **Step 3: Confirm the PR is mergeable under the new rule**
 

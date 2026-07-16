@@ -38,11 +38,16 @@ dashboard and Worker version metadata are the source of truth for the alias.
 For example, `codex/automated-worker-deployments` becomes
 `codex-automated-worker-deployments` in that hostname.
 
+The required GitHub status check is exactly `Workers Builds: dahvinci`. Its
+source must be the **Cloudflare Workers and Pages** GitHub App, whose app slug
+is `cloudflare-workers-and-pages`; a same-named check from another integration
+does not satisfy the production rule.
+
 `main` is protected by a GitHub ruleset. Changes require a pull request with a
-successful Cloudflare build; no human approval is required. The pull-request
-branch must be current with `main`, and force pushes to or deletion of `main`
-are blocked. Merging a passing PR triggers a production build and deploys the
-new version to `dahvinci.madtown.cloud`.
+successful `Workers Builds: dahvinci` check from that app; no human approval is
+required. The pull-request branch must be current with `main`, and force pushes
+to or deletion of `main` are blocked. Merging a passing PR triggers a production
+build and deploys the new version to `dahvinci.madtown.cloud`.
 
 ## Manual deployment
 
