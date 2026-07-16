@@ -32,9 +32,10 @@ Worker version without changing production. When the branch has an open pull
 request, Cloudflare reports the build and public preview URL on the PR.
 
 `main` is protected by a GitHub ruleset. Changes require a pull request with a
-successful Cloudflare build; no human approval is required. Merging a passing
-PR triggers a production build and deploys the new version to
-`dahvinci.madtown.cloud`.
+successful Cloudflare build; no human approval is required. The pull-request
+branch must be current with `main`, and force pushes to or deletion of `main`
+are blocked. Merging a passing PR triggers a production build and deploys the
+new version to `dahvinci.madtown.cloud`.
 
 ## Manual deployment
 
