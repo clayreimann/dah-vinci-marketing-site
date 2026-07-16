@@ -25,11 +25,18 @@ The existing `dahvinci` Worker is connected to
 - Production deploy command: `npm run deploy`
 - Non-production deploy command: `npx wrangler versions upload`
 - Non-production branch builds: enabled
-- Preview URLs: public
+- Preview URLs: enabled and public
+- Ordinary production `workers.dev` route: disabled
 
 Every non-production branch push validates the configuration and uploads a
 Worker version without changing production. When the branch has an open pull
-request, Cloudflare reports the build and public preview URL on the PR.
+request, Cloudflare's GitHub check and comment confirm the build result. The
+comment may omit the preview link even when the preview is healthy. The stable
+branch URL is
+`https://<sanitized-branch>-dahvinci.c-jensenreimann.workers.dev`; Cloudflare's
+dashboard and Worker version metadata are the source of truth for the alias.
+For example, `codex/automated-worker-deployments` becomes
+`codex-automated-worker-deployments` in that hostname.
 
 `main` is protected by a GitHub ruleset. Changes require a pull request with a
 successful Cloudflare build; no human approval is required. The pull-request
@@ -53,7 +60,9 @@ the normal pull-request flow so Git remains the deployment source of truth.
 ## Verification
 
 For previews and production, verify that `/`, `/privacy`, and `/support` return
-`200`, and that an unknown path returns the custom `404` page.
+`200`, and that an unknown path returns the custom `404` page. Before testing a
+preview, confirm in Cloudflare that **Preview URLs** are enabled with Public
+visibility while the ordinary production `workers.dev` route remains disabled.
 
 ## Rollback
 

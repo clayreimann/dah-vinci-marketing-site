@@ -50,6 +50,7 @@ Builds** with these values:
 - Non-production branch deploy command: `npx wrangler versions upload`
 - Builds for non-production branches: enabled
 - Preview URLs: enabled and public
+- Ordinary production `workers.dev` route: disabled
 
 Cloudflare Workers Builds manages the deployment credential. No Cloudflare API
 token is committed to the repository or added as a GitHub Actions secret.
@@ -80,9 +81,17 @@ that exceptional change remains visible in repository administration history.
    `npx wrangler versions upload`.
 4. Cloudflare creates a new Worker version without promoting it to production.
 5. Cloudflare publishes a public version and branch preview URL, a GitHub check
-   run, and a pull-request comment when the branch has an open PR.
+   run, and a pull-request comment when the branch has an open PR. The check and
+   comment confirm build status, but the comment is not required to contain the
+   preview link. Cloudflare's dashboard and Worker version metadata are the
+   source of truth for the preview alias.
 6. Review verifies `/`, `/privacy`, `/support`, and an unknown route on the
    preview before merge.
+
+For this Worker, the stable branch preview format is
+`https://<sanitized-branch>-dahvinci.c-jensenreimann.workers.dev`. Preview URLs
+must be enabled with Public visibility while the ordinary production
+`dahvinci.c-jensenreimann.workers.dev` route remains disabled.
 
 ### Production deployment
 
@@ -118,7 +127,7 @@ changes follow the same preview-and-review path.
 3. Connect the existing `dahvinci` Worker to the GitHub repository and enable
    non-production branch builds.
 4. Open a pull request from the feature branch so Cloudflare produces its first
-   preview, PR comment, and named check run.
+   preview, build-status PR comment, and named check run.
 5. Verify preview routing and content.
 6. Create the active `main` ruleset and select the observed Cloudflare check as
    required.
@@ -134,8 +143,9 @@ that check name and source.
 - `npm run check` succeeds locally and in Workers Builds.
 - A non-production branch creates a Worker version but does not change the
   active production version.
-- The pull request receives a successful Cloudflare check and public preview
-  URL.
+- The pull request receives a successful Cloudflare check, and its public
+  branch alias is discoverable from Cloudflare's dashboard or Worker version
+  metadata even if the build-status comment omits the URL.
 - Preview `/`, `/privacy`, and `/support` return `200`; an unknown path returns
   the custom `404` page.
 - GitHub rejects a direct update to protected `main` and prevents merging while
