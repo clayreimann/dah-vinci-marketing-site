@@ -2,6 +2,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "dahvinci",
   "compatibility_date": "2026-07-15",
+  "preview_urls": true,
   "assets": {
     "directory": "./website",
     "not_found_handling": "404-page",
