@@ -291,16 +291,16 @@ preview version appears in Cloudflare version history.
 
 **Interfaces:**
 - Consumes: The successful Cloudflare check name and GitHub App source observed in Task 2.
-- Produces: An active default-branch ruleset and a verified production deploy triggered only by merging a passing PR.
+- Produces: The active `Protect main` ruleset targeting exactly `refs/heads/main` and a verified production deploy triggered only by merging a passing PR.
 
 - [ ] **Step 1: Create the active `main` ruleset after the Cloudflare check exists**
 
 In GitHub, open **Settings → Rules → Rulesets → New branch ruleset** and enter:
 
 ```text
-Ruleset name: Protect production main
+Ruleset name: Protect main
 Enforcement status: Active
-Target branches: Include default branch
+Target branches: Include refs/heads/main
 Bypass list: empty
 Restrict deletions: enabled
 Require a pull request before merging: enabled
@@ -312,7 +312,8 @@ Require branches to be up to date before merging: enabled
 Block force pushes: enabled
 ```
 
-Expected: GitHub creates one active repository ruleset targeting `main`.
+Expected: GitHub creates one active repository ruleset named `Protect main`
+targeting exactly `refs/heads/main`. The accepted live ruleset ID is `19023987`.
 
 - [ ] **Step 2: Verify the ruleset through the GitHub API**
 
@@ -326,12 +327,13 @@ CLOUDFLARE_APP_ID="$(
 )"
 RULESET_ID="$(
   gh api repos/clayreimann/dah-vinci-marketing-site/rulesets \
-    --jq '.[] | select(.name == "Protect production main") | .id'
+    --jq '.[] | select(.id == 19023987 and .name == "Protect main") | .id'
 )"
 test -n "$CLOUDFLARE_APP_ID"
 test -n "$RULESET_ID"
 gh api "repos/clayreimann/dah-vinci-marketing-site/rulesets/$RULESET_ID" | \
   jq --argjson cloudflare_app_id "$CLOUDFLARE_APP_ID" '{
+    id,
     name,
     target,
     enforcement,
@@ -361,12 +363,13 @@ Expected:
 
 ```json
 {
-  "name": "Protect production main",
+  "id": 19023987,
+  "name": "Protect main",
   "target": "branch",
   "enforcement": "active",
   "ref_name": {
     "exclude": [],
-    "include": ["~DEFAULT_BRANCH"]
+    "include": ["refs/heads/main"]
   },
   "bypass_actors": [],
   "pull_request_ok": true,
@@ -381,7 +384,7 @@ exact app slug `cloudflare-workers-and-pages`; `required_check_ok` proves the
 ruleset pins that integration ID, uses the exact check context, and requires a
 strict/up-to-date branch. Treat a missing value, duplicate ruleset ID, different
 ref condition, non-empty bypass list, or any `false` audit field as a failed
-verification.
+verification. The only accepted include value is `refs/heads/main`.
 
 - [ ] **Step 3: Confirm the PR is mergeable under the new rule**
 

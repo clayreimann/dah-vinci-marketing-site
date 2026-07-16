@@ -59,8 +59,9 @@ token is committed to the repository or added as a GitHub Actions secret.
 
 ## GitHub protection
 
-Create an active repository ruleset targeting the default branch, `main`, after
-Cloudflare has reported its first check. Configure it to:
+Create an active repository ruleset named `Protect main` targeting exactly
+`refs/heads/main` after Cloudflare has reported its first check. Configure it
+to:
 
 - Require changes to arrive through a pull request.
 - Require zero approving reviews.
@@ -133,8 +134,8 @@ changes follow the same preview-and-review path.
 4. Open a pull request from the feature branch so Cloudflare reports the
    preview, build-status PR comment, and named check run.
 5. Verify preview routing and content.
-6. Create the active `main` ruleset and select the observed Cloudflare check as
-   required.
+6. Create the active `Protect main` ruleset targeting exactly
+   `refs/heads/main`, and select the observed Cloudflare check as required.
 7. Merge the pull request.
 8. Verify the resulting production build and the live custom-domain routes.
 
